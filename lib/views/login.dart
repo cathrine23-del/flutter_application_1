@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/controller/login%20controller.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -5,6 +7,7 @@ import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_navigation/src/snackbar/snackbar.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:http/http.dart' as http;
 
 LoginController loginController = Get.put(LoginController());
 TextEditingController usernameController = TextEditingController();
@@ -111,12 +114,46 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   )),
               SizedBox(height: 30),
-              // MaterialButton(
-              //   onPressed: () {},
-              //   color: Colors.brown,
-              //   textColor: Colors.white,
-              //   child: Text("Login"),
-              // ), // we must specify what this butoon does when it is pressed. () for no name
+
+              MaterialButton(
+                onPressed: () async {
+                  if (usernameController.text.isEmpty) {
+                    Get.snackbar("Error", "Please enter your username");
+                  } else if (passwordController.text.isEmpty) {
+                    Get.snackbar("Error", "Please enter your password");
+                  } else {
+                    try {
+                      final response = await http.get(
+                        Uri.parse(
+                            "http://10.0.2.2/flutter_api/login.php?phone=${usernameController.text}&password=${passwordController.text}"),
+                      );
+
+                      print(response.body);
+
+                      if (response.statusCode == 200) {
+                        final serverData = jsonDecode(response.body);
+
+                        if (serverData['code'] == '1') {
+                          String phone = serverData["user details"][0]["phone"];
+
+                          Get.toNamed("/homescreen");
+                        } else {
+                          Get.snackbar(
+                              "Wrong credentials", serverData['message']);
+                        }
+                      } else {
+                        Get.snackbar(
+                            "Server Error", "Error occurred while logging in");
+                      }
+                    } catch (e) {
+                      Get.snackbar("Error", "Something went wrong");
+                    }
+                  }
+                },
+                color: Colors.brown,
+                textColor: Colors.white,
+                child: const Text("Login"),
+              ), // we must specify what this butoon does when it is pressed. () for no name
               GestureDetector(
                 child: Container(
                   height: 50,
