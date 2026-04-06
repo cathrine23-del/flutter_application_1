@@ -45,15 +45,90 @@ class _SignupScreenState extends State<SignupScreen> {
                   children: [
                     Text(
                       "username",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
+                    ),
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            "email",
+                          ),
+                          SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  "phone",
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // TextField(
+                          //   controller: phoneController,
+                          //   keyboardType: TextInputType.phone,
+                          //   decoration: InputDecoration(
+                          //     border: OutlineInputBorder(
+                          //       borderRadius: BorderRadius.circular(20),
+                          //     ),
+                          //     hintText: "enter your phone",
+                          //     prefixIcon: Icon(Icons.phone),
+                          //   ),
+                          // ),
+                        ],
                       ),
                     ),
+                    // TextField(
+                    //   controller: emailController,
+                    //   decoration: InputDecoration(
+                    //     border: OutlineInputBorder(
+                    //       borderRadius: BorderRadius.circular(20),
+                    //     ),
+                    //     hintText: "enter your email",
+                    //     prefixIcon: Icon(Icons.email),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    "username",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
               TextField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  hintText: "enter your username",
+                  hintStyle: TextStyle(fontWeight: FontWeight.w100),
+                  prefixIcon: Icon(Icons.person),
+                ),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    "email",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: emailController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -64,6 +139,28 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    "phone",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: phoneController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  hintText: "enter your phone",
+                  hintStyle: TextStyle(fontWeight: FontWeight.w100),
+                  prefixIcon: Icon(Icons.phone),
+                ),
+              ),
+              SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -80,6 +177,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               TextField(
+                controller: passwordController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -107,6 +205,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               TextField(
+                controller: confirmPasswordController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -117,40 +216,43 @@ class _SignupScreenState extends State<SignupScreen> {
                   suffixIcon: Icon(Icons.visibility),
                 ),
               ),
-              MaterialButton(
-                onPressed: () async {
-                  if (usernameController.text.isEmpty) {
-                    Get.snackbar("Error", "Please enter your name");
-                  } else if (emailController.text.isEmpty) {
-                    Get.snackbar("Error", "Please enter your email");
-                  } else if (phoneController.text.isEmpty) {
-                    Get.snackbar("Error", "Please enter your phone");
-                  } else if (passwordController.text.isEmpty ||
-                      confirmPasswordController.text.isEmpty ||
-                      passwordController.text.toString().compareTo(
-                              confirmPasswordController.text.toString()) !=
-                          0) {
-                    Get.snackbar("Error", "Please enter your password");
-                  } else if (confirmPasswordController.text.isEmpty) {
-                    Get.snackbar("Error",
-                        "password and confirm password should be non empty and matching");
+              GestureDetector(
+                onTap: () async {
+                  if (emailController.text.isEmpty ||
+                      passwordController.text.isEmpty) {
+                    Get.snackbar("Error", "Please fill all fields");
+                    return;
                   }
-                  final response = await http.get(Uri.parse(
-                      "http://10.0.2.2/flutter_api/signup.php?name={name.text}&email={email.text}&phone={phone.text}&password={password.text}"));
-                  print(response.body);
-                  if (response.statusCode == 200) {
-                    final serverData = jsonDecode(response.body);
-                    if (serverData['status'] == "1") {
-                      Get.snackbar("sign up", "sign up success");
-                      Get.offAndToNamed("/");
+
+                  try {
+                    final response = await http.post(
+                      Uri.parse("http://localhost/flutter_api/login.php"),
+                      headers: {"Content-Type": "application/json"},
+                      body: jsonEncode({
+                        "email": emailController.text,
+                        "password": passwordController.text,
+                      }),
+                    );
+
+                    print(response.body);
+
+                    if (response.statusCode == 200) {
+                      final serverData = jsonDecode(response.body);
+
+                      if (serverData['code'] == 1) {
+                        Get.snackbar("Success", "Login successful");
+                        Get.offAndToNamed("/homescreen");
+                      } else {
+                        Get.snackbar("Error", serverData['message']);
+                      }
                     } else {
-                      Get.snackbar("sign up", "sign up failed");
+                      Get.snackbar("Error", "Server error");
                     }
-                  } else {
-                    Get.snackbar("sign up", "sign up failed");
+                  } catch (e) {
+                    print(e);
+                    Get.snackbar("Error", "Something went wrong");
                   }
                 },
-                textColor: Colors.blue,
                 child: Text("sign up", style: TextStyle(color: Colors.black)),
               ),
               Container(

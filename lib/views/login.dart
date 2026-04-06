@@ -10,7 +10,7 @@ import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:http/http.dart' as http;
 
 LoginController loginController = Get.put(LoginController());
-TextEditingController usernameController = TextEditingController();
+TextEditingController emailController = TextEditingController();
 TextEditingController passwordController = TextEditingController();
 
 class LoginScreen extends StatefulWidget {
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Row(
                   children: [
                     Text(
-                      "Enter username",
+                      "Enter ",
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -63,12 +63,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               TextField(
-                controller: usernameController,
+                controller: emailController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                   ), //makes the edges softer
-                  hintText: "Use email or phone number",
+                  hintText: "Use email ",
                   prefixIcon: Icon(Icons.person), //desplays the icins
                 ),
               ),
@@ -115,45 +115,39 @@ class _LoginScreenState extends State<LoginScreen> {
                   )),
               SizedBox(height: 30),
 
-              MaterialButton(
-                onPressed: () async {
-                  if (usernameController.text.isEmpty) {
-                    Get.snackbar("Error", "Please enter your username");
-                  } else if (passwordController.text.isEmpty) {
-                    Get.snackbar("Error", "Please enter your password");
-                  } else {
-                    try {
-                      final response = await http.get(
-                        Uri.parse(
-                            "http://10.0.2.2/flutter_api/login.php?phone=${usernameController.text}&password=${passwordController.text}"),
-                      );
+              MaterialButton(onPressed: () async {
+                if (emailController.text.isEmpty) {
+                  Get.snackbar("Error", "Please enter your email");
+                } else if (passwordController.text.isEmpty) {
+                  Get.snackbar("Error", "Please enter your password");
+                } else {
+                  try {
+                    final response = await http.get(
+                      Uri.parse(
+                          "http://localhost/flutter_api/login.php?email=${emailController.text}&password=${passwordController.text}"),
+                    );
+                    print(response.body);
 
-                      print(response.body);
+                    if (response.statusCode == 200) {
+                      final serverData = jsonDecode(response.body);
 
-                      if (response.statusCode == 200) {
-                        final serverData = jsonDecode(response.body);
+                      if (serverData['code'] == '1') {
+                        String email = serverData["user details"][0]["email"];
 
-                        if (serverData['code'] == '1') {
-                          String phone = serverData["user details"][0]["phone"];
-
-                          Get.toNamed("/homescreen");
-                        } else {
-                          Get.snackbar(
-                              "Wrong credentials", serverData['message']);
-                        }
+                        Get.toNamed("/homescreen");
                       } else {
                         Get.snackbar(
-                            "Server Error", "Error occurred while logging in");
+                            "Wrong credentials", serverData['message']);
                       }
-                    } catch (e) {
-                      Get.snackbar("Error", "Something went wrong");
+                    } else {
+                      Get.snackbar(
+                          "Server Error", "Error occurred while logging in");
                     }
+                  } catch (e) {
+                    Get.snackbar("Error", "Something went wrong");
                   }
-                },
-                color: Colors.brown,
-                textColor: Colors.white,
-                child: const Text("Login"),
-              ), // we must specify what this butoon does when it is pressed. () for no name
+                }
+              }), // we must specify what this butoon does when it is pressed. () for no name
               GestureDetector(
                 child: Container(
                   height: 50,
@@ -167,17 +161,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
                 ),
-                onTap: () {
-                  bool success = loginController.login(
-                      usernameController.text, passwordController.text);
-                  if (success) {
-                    Get.offAndToNamed("/homescreen");
+                onTap: () async {
+                  final response = await http.post(
+                    Uri.parse("http://localhost/flutter_api/login.php"),
+                    body: {
+                      "email": emailController.text,
+                      "password": passwordController.text,
+                    },
+                  );
+                  print(response.body);
+                  if (response.statusCode == 200) {
+                    final serverData = jsonDecode(response.body);
+                    if (serverData['code'] == 1) {
+                      Get.snackbar("login", "login success");
+                      Get.offAndToNamed("/");
+                    } else {
+                      Get.snackbar("login", "login failed");
+                    }
                   } else {
-                    Get.snackbar(
-                        snackPosition: SnackPosition.BOTTOM,
-                        "Error",
-                        "Invalid username or password");
+                    Get.snackbar("login", "login failed");
                   }
+
+                  // bool success = loginController.login(
+                  //     usernameController.text, passwordController.text);
+                  // if (success) {
+                  //   Get.offAndToNamed("/homescreen");
+                  // } else {
+                  //   Get.snackbar(
+                  //       snackPosition: SnackPosition.BOTTOM,
+                  //       "Error",
+                  //       "Invalid username or password");
+                  // }
                 },
               ),
               Padding(

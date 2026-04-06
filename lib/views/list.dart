@@ -1,9 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class listpage extends StatelessWidget {
+var myfoodItem = [];
+bool loaded = false;
+
+class listpage extends StatefulWidget {
   const listpage({super.key});
+
+  @override
+  State<listpage> createState() => _listpageState();
+}
+
+class _listpageState extends State<listpage> {
+  @override
+  void initState() {
+    super.initState();
+    fetchFood();
+  }
+
+  fetchFood() async {
+    var response = await http.get(
+      Uri.parse("http://10.0.2.2/food/fetch.php"), // FIXED localhost
+    );
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      var foodData = data['food']; // FIXED serverData
+
+      for (var food in foodData) {
+        myfoodItem.add({
+          "name": food['name'],
+          "price": food['price'],
+          "image": food['image']
+        });
+      }
+
+      setState(() {
+        loaded = true;
+      });
+
+      print(foodData);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Server error")),
+      );
+    }
+  }
 
   Widget foodItem(String name, String price, IconData icon) {
     return Card(
@@ -22,23 +67,29 @@ class listpage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: GestureDetector(
-          child: Text("List Page"),
-          onTap: () {
-            Get.offAllNamed("/list");
-          },
-        ),
+        title: Text("List Page"),
       ),
-      body: ListView(
-        children: [
-          foodItem("Pizza", "Ksh 900", Icons.local_pizza),
-          foodItem("Burger", "Ksh 700", Icons.lunch_dining),
-          foodItem("Fries", "Ksh 300", Icons.fastfood),
-          foodItem("Chicken", "Ksh 850", Icons.set_meal),
-          foodItem("Drink", "Ksh 200", Icons.local_drink),
-          foodItem("Ice Cream", "Ksh 250", Icons.icecream),
-        ],
-      ),
+      body: loaded
+          ? ListView.builder(
+              itemCount: myfoodItem.length,
+              itemBuilder: (context, index) {
+                return Row(
+                  children: [
+                    Image.network(
+                      "http://10.0.2.2/food/images/${myfoodItem[index]['image']}",
+                      height: 100,
+                      width: 150,
+                    ),
+                    Column(
+                      children: [
+                        Text(myfoodItem[index]['name']), // FIXED
+                        Text(myfoodItem[index]['price']), // FIXED
+                      ],
+                    )
+                  ],
+                );
+              })
+          : Center(child: CircularProgressIndicator()),
     );
   }
 }
