@@ -23,7 +23,7 @@ class _listpageState extends State<listpage> {
 
   fetchFood() async {
     var response = await http.get(
-      Uri.parse("http://10.0.2.2/food/fetch.php"), // FIXED localhost
+      Uri.parse("http://localhost/food/fetch.php"), // FIXED localhost
     );
 
     if (response.statusCode == 200) {
@@ -76,7 +76,7 @@ class _listpageState extends State<listpage> {
                 return Row(
                   children: [
                     Image.network(
-                      "http://10.0.2.2/food/images/${myfoodItem[index]['image']}",
+                      "http://localhost/food/images/${myfoodItem[index]['image']}",
                       height: 100,
                       width: 150,
                     ),
