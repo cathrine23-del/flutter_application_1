@@ -22,7 +22,7 @@ var routes = [
     page: () => Homescreen(),
   ),
   GetPage(name: "/dashboard", page: () => Dashboard()),
-  GetPage(name: "/list", page: () => listpage()),
+  GetPage(name: "/listpage", page: () => listpage()),
   GetPage(name: "/profile", page: () => Profile()),
 
  GetPage(name: "/category", page: () => Category()),

@@ -4,6 +4,7 @@ import 'package:flutter_application_1/views/dashboard.dart';
 import 'package:flutter_application_1/views/profile.dart';
 import 'package:flutter_application_1/views/list.dart';
 import 'package:flutter_application_1/views/category.dart';
+import 'package:flutter_application_1/views/cart.dart';
 
 class Homescreen extends StatefulWidget {
   const Homescreen({super.key});
@@ -20,6 +21,7 @@ class _HomescreenState extends State<Homescreen> {
     listpage(),
     Category(),
     Profile(),
+    Cart(),
   ];
 
   @override
@@ -27,12 +29,13 @@ class _HomescreenState extends State<Homescreen> {
     return Scaffold(
       body: pages[currentIndex],
       bottomNavigationBar: CurvedNavigationBar(
-          backgroundColor: Colors.blueAccent,
+          backgroundColor: Colors.deepOrange,
           items: <Widget>[
             Icon(Icons.dashboard, size: 30),
             Icon(Icons.category, size: 30),
             Icon(Icons.list, size: 30),
             Icon(Icons.person, size: 30),
+            Icon(Icons.shopping_cart, size: 30),
           ],
           onTap: (index) {
             setState(() {

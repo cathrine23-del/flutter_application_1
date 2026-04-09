@@ -1,31 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get.dart';
 
 class Category extends StatelessWidget {
   const Category({super.key});
 
-  @override
-  Widget categoryCard(IconData icon, String title) {
-    return Container(
-      width: 150,
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.orange,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 40),
-          const SizedBox(
-            height: 10,
+  // Reusable card widget with Asset Images
+  Widget categoryCard(
+      IconData icon, String title, String assetPath, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          image: DecorationImage(
+            // Manually added images in your assets/images/ folder
+            image: AssetImage(assetPath),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black
+                  .withOpacity(0.5), // Darkens image for better text contrast
+              BlendMode.darken,
+            ),
           ),
-          Text(
-            title,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          )
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 45, color: Colors.white),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -34,12 +54,11 @@ class Category extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: GestureDetector(
-          child: const Text("Categories"),
-          onTap: () {
-            Get.offAllNamed("/category");
-          },
-        ),
+        title: const Text("Food Categories"),
+        centerTitle: true,
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -48,12 +67,18 @@ class Category extends StatelessWidget {
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
           children: [
-            categoryCard(Icons.local_pizza, "Pizza"),
-            categoryCard(Icons.lunch_dining, "Burger"),
-            categoryCard(Icons.fastfood, "Fries"),
-            categoryCard(Icons.local_drink, "Drinks"),
-            categoryCard(Icons.icecream, "Desserts"),
-            categoryCard(Icons.ramen_dining, "Noodles"),
+            categoryCard(Icons.local_pizza, "Pizza", "assets/pizza.jpg",
+                () => Get.toNamed("/listpage", arguments: "pizza")),
+            categoryCard(Icons.lunch_dining, "Burger", "assets/burger.jpg",
+                () => Get.toNamed("/listpage", arguments: "burger")),
+            categoryCard(Icons.fastfood, "Fries", "assets/fries.jpg",
+                () => Get.toNamed("/listpage", arguments: "fries")),
+            categoryCard(Icons.local_drink, "Drinks", "assets/juice.jpg",
+                () => Get.toNamed("/listpage", arguments: "drinks")),
+            categoryCard(Icons.icecream, "Desserts", "assets/desert.jpg",
+                () => Get.toNamed("/listpage", arguments: "dessert")),
+            categoryCard(Icons.ramen_dining, "Noodles", "assets/noodles.jpg",
+                () => Get.toNamed("/listpage", arguments: "noodles")),
           ],
         ),
       ),
