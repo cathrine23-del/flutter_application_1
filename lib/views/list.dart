@@ -18,9 +18,17 @@ class _listpageState extends State<listpage> {
   // Get the category name sent from the Category Page
   String categoryName = Get.arguments ?? "All Foods";
 
+  // Change this line
+
   @override
   void initState() {
     super.initState();
+    // Check if arguments is a Map or a String
+    if (Get.arguments is Map) {
+      categoryName = Get.arguments['category_name'] ?? "All Foods";
+    } else {
+      categoryName = Get.arguments ?? "All Foods";
+    }
     fetchFood();
   }
 

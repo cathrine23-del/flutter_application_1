@@ -1,16 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/views/login.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-
-TextEditingController usernameController = TextEditingController();
-TextEditingController emailController = TextEditingController();
-TextEditingController phoneController = TextEditingController();
-TextEditingController passwordController = TextEditingController();
-TextEditingController confirmPasswordController = TextEditingController();
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -20,279 +11,192 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
+  bool isPasswordVisible = false;
+  bool isConfirmVisible = false;
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> handleSignup() async {
+    if (usernameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        phoneController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      Get.snackbar("Error", "Please fill all fields");
+      return;
+    }
+
+    if (passwordController.text != confirmPasswordController.text) {
+      Get.snackbar("Error", "Passwords do not match");
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      var url = Uri.parse("http://localhost/flutter_api/signup.php");
+
+      var response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: {
+          "name": usernameController.text.trim(),
+          "email": emailController.text.trim(),
+          "phone": phoneController.text.trim(),
+          "password": passwordController.text.trim(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data["code"] == 1) {
+          Get.snackbar("Success", "Account created successfully");
+          Get.offAllNamed("/");
+        } else {
+          Get.snackbar("Error", data["message"]);
+        }
+      } else {
+        Get.snackbar("Error", "Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Connection failed");
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  // Helper function to keep code clean
+  InputDecoration customInputDecoration(String hint, IconData icon,
+      {Widget? suffix}) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon),
+      suffixIcon: suffix,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // appBar: AppBar(
-      //   backgroundColor: Colors.blue,
-      //   title: Text(
-      //     "Sign up",
-      //     style: TextStyle(fontSize: 30, color: Colors.black),
-      //   ),
-      //   centerTitle: true,
-      // ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Image.asset('assets/cutlery.png', height: 100, width: 100),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      "username",
+        padding: const EdgeInsets.all(15.0),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                const Icon(Icons.restaurant_menu,
+                    size: 80, color: Colors.deepOrange),
+                const SizedBox(height: 20),
+                const Text(
+                  "Create Account",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 30),
+                TextField(
+                  controller: usernameController,
+                  decoration: customInputDecoration("Username", Icons.person),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: emailController,
+                  decoration: customInputDecoration("Email", Icons.email),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: phoneController,
+                  decoration: customInputDecoration("Phone", Icons.phone),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: passwordController,
+                  obscureText: !isPasswordVisible,
+                  decoration: customInputDecoration(
+                    "Password",
+                    Icons.lock,
+                    suffix: IconButton(
+                      icon: Icon(isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      onPressed: () => setState(
+                          () => isPasswordVisible = !isPasswordVisible),
                     ),
-                    SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            "email",
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: !isConfirmVisible,
+                  decoration: customInputDecoration(
+                    "Confirm Password",
+                    Icons.lock_outline,
+                    suffix: IconButton(
+                      icon: Icon(isConfirmVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      onPressed: () =>
+                          setState(() => isConfirmVisible = !isConfirmVisible),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                GestureDetector(
+                  onTap: isLoading ? null : handleSignup,
+                  child: Container(
+                    height: 55,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "Sign Up",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold),
                           ),
-                          SizedBox(height: 20),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                Text(
-                                  "phone",
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // TextField(
-                          //   controller: phoneController,
-                          //   keyboardType: TextInputType.phone,
-                          //   decoration: InputDecoration(
-                          //     border: OutlineInputBorder(
-                          //       borderRadius: BorderRadius.circular(20),
-                          //     ),
-                          //     hintText: "enter your phone",
-                          //     prefixIcon: Icon(Icons.phone),
-                          //   ),
-                          // ),
-                        ],
-                      ),
-                    ),
-                    // TextField(
-                    //   controller: emailController,
-                    //   decoration: InputDecoration(
-                    //     border: OutlineInputBorder(
-                    //       borderRadius: BorderRadius.circular(20),
-                    //     ),
-                    //     hintText: "enter your email",
-                    //     prefixIcon: Icon(Icons.email),
-                    //   ),
-                    // ),
-                  ],
+                  ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    "username",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: usernameController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  hintText: "enter your username",
-                  hintStyle: TextStyle(fontWeight: FontWeight.w100),
-                  prefixIcon: Icon(Icons.person),
-                ),
-              ),
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    "email",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  hintText: "enter your email",
-                  hintStyle: TextStyle(fontWeight: FontWeight.w100),
-                  prefixIcon: Icon(Icons.email),
-                ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    "phone",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: phoneController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  hintText: "enter your phone",
-                  hintStyle: TextStyle(fontWeight: FontWeight.w100),
-                  prefixIcon: Icon(Icons.phone),
-                ),
-              ),
-              SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "password",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    const Text("Already have an account?"),
+                    TextButton(
+                      onPressed: () => Get.back(),
+                      child: const Text("Log in",
+                          style: TextStyle(color: Colors.pinkAccent)),
                     ),
                   ],
                 ),
-              ),
-              TextField(
-                controller: passwordController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  hintText: "enter password",
-                  hintStyle: TextStyle(fontWeight: FontWeight.w100),
-                  prefixIcon: Icon(Icons.lock),
-                  suffixIcon: Icon(Icons.visibility),
-                ),
-              ),
-              SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      "confirm password",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              TextField(
-                controller: confirmPasswordController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  hintText: "confirm password",
-                  hintStyle: TextStyle(fontWeight: FontWeight.w100),
-                  prefixIcon: Icon(Icons.lock),
-                  suffixIcon: Icon(Icons.visibility),
-                ),
-              ),
-              GestureDetector(
-                onTap: () async {
-                  if (emailController.text.isEmpty ||
-                      passwordController.text.isEmpty) {
-                    Get.snackbar("Error", "Please fill all fields");
-                    return;
-                  }
-
-                  try {
-                    final response = await http.post(
-                      Uri.parse("http://localhost/flutter_api/login.php"),
-                      headers: {"Content-Type": "application/json"},
-                      body: jsonEncode({
-                        "email": emailController.text,
-                        "password": passwordController.text,
-                      }),
-                    );
-
-                    print(response.body);
-
-                    if (response.statusCode == 200) {
-                      final serverData = jsonDecode(response.body);
-
-                      if (serverData['code'] == 1) {
-                        Get.snackbar("Success", "Login successful");
-                        Get.offAndToNamed("/homescreen");
-                      } else {
-                        Get.snackbar("Error", serverData['message']);
-                      }
-                    } else {
-                      Get.snackbar("Error", "Server error");
-                    }
-                  } catch (e) {
-                    print(e);
-                    Get.snackbar("Error", "Something went wrong");
-                  }
-                },
-                child: Text("sign up", style: TextStyle(color: Colors.black)),
-              ),
-              Container(
-                height: 50,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.deepOrange,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  "sign up",
-                  style: TextStyle(fontSize: 20, color: Colors.black),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 5, 10, 0),
-                child: Row(
-                  children: [
-                    Text("already have an account?"),
-                    SizedBox(width: 5),
-                    GestureDetector(
-                      child: Text(
-                        "Log in",
-                        style: TextStyle(color: Colors.red, fontSize: 10),
-                      ),
-                      onTap: () {
-                        Get.toNamed("/");
-                      },
-                    ),
-                    //  Spacer(),
-                    //   Text("forgot password?"),
-                    //   SizedBox(width: 5),
-                    //   Text(
-                    //     "reset password",
-                    //     style: TextStyle(color: Colors.red, fontSize: 10),
-                    //   ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

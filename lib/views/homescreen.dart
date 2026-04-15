@@ -32,8 +32,8 @@ class _HomescreenState extends State<Homescreen> {
           backgroundColor: Colors.deepOrange,
           items: <Widget>[
             Icon(Icons.dashboard, size: 30),
-            Icon(Icons.category, size: 30),
             Icon(Icons.list, size: 30),
+            Icon(Icons.category, size: 30),
             Icon(Icons.person, size: 30),
             Icon(Icons.shopping_cart, size: 30),
           ],
