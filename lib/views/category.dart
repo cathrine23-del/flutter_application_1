@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 class Category extends StatelessWidget {
   const Category({super.key});
 
-  // Reusable card widget with Asset Images
   Widget categoryCard(
       IconData icon, String title, String assetPath, VoidCallback onTap) {
     return GestureDetector(
@@ -13,12 +12,10 @@ class Category extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           image: DecorationImage(
-            // Manually added images in your assets/images/ folder
             image: AssetImage(assetPath),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black
-                  .withOpacity(0.5), // Darkens image for better text contrast
+              Colors.black.withOpacity(0.5),
               BlendMode.darken,
             ),
           ),
@@ -67,18 +64,48 @@ class Category extends StatelessWidget {
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
           children: [
-            categoryCard(Icons.local_pizza, "Pizza", "assets/pizza.jpg",
-                () => Get.toNamed("/listpage", arguments: "pizza")),
-            categoryCard(Icons.lunch_dining, "Burger", "assets/burger.jpg",
-                () => Get.toNamed("/listpage", arguments: "burger")),
-            categoryCard(Icons.fastfood, "Fries", "assets/fries.jpg",
-                () => Get.toNamed("/listpage", arguments: "fries")),
-            categoryCard(Icons.local_drink, "Drinks", "assets/juice.jpg",
-                () => Get.toNamed("/listpage", arguments: "drinks")),
-            categoryCard(Icons.icecream, "Desserts", "assets/desert.jpg",
-                () => Get.toNamed("/listpage", arguments: "dessert")),
-            categoryCard(Icons.ramen_dining, "Noodles", "assets/noodles.jpg",
-                () => Get.toNamed("/listpage", arguments: "noodles")),
+            // UPDATED: Passing as a Map to match your listpage expectation
+            categoryCard(
+                Icons.local_pizza,
+                "Pizza",
+                "assets/pizza.jpg",
+                () => Get.toNamed("/listpage",
+                    arguments: {"category_name": "pizza"})),
+
+            categoryCard(
+                Icons.lunch_dining,
+                "Burger",
+                "assets/burger.jpg",
+                () => Get.toNamed("/listpage",
+                    arguments: {"category_name": "burger"})),
+
+            categoryCard(
+                Icons.fastfood,
+                "Fries",
+                "assets/fries.jpg",
+                () => Get.toNamed("/listpage",
+                    arguments: {"category_name": "fries"})),
+
+            categoryCard(
+                Icons.local_drink,
+                "Drinks",
+                "assets/juice.jpg",
+                () => Get.toNamed("/listpage",
+                    arguments: {"category_name": "drinks"})),
+
+            categoryCard(
+                Icons.icecream,
+                "Desserts",
+                "assets/desert.jpg",
+                () => Get.toNamed("/listpage",
+                    arguments: {"category_name": "dessert"})),
+
+            categoryCard(
+                Icons.ramen_dining,
+                "Noodles",
+                "assets/noodles.jpg",
+                () => Get.toNamed("/listpage",
+                    arguments: {"category_name": "noodles"})),
           ],
         ),
       ),

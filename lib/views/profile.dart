@@ -8,14 +8,12 @@ class Profile extends StatelessWidget {
   Widget build(BuildContext context) {
     Map? userData;
 
-    // ✅ SAFE RETRIEVAL
     try {
       userData = Get.find<Map>(tag: 'currentUser');
     } catch (e) {
       userData = null;
     }
 
-    // ✅ RED SCREEN PREVENTER
     if (userData == null) {
       return const Scaffold(
         body: Center(
@@ -53,21 +51,21 @@ class Profile extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: themeOrange, width: 3),
                 ),
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 70,
-                  backgroundImage: AssetImage('assets/profile_placeholder.jpg'),
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.grey[200],
+                  child: const Icon(Icons.person, size: 70, color: Colors.grey),
                 ),
               ),
             ),
             const SizedBox(height: 15),
             Text(
-              userData['name'] ?? "User Name",
+              userData['name']?.toString() ?? "User Name",
               style: const TextStyle(
                   fontSize: 24, fontWeight: FontWeight.bold, color: themeGray),
             ),
             Text(
-              userData['email'] ?? "email@example.com",
+              userData['email']?.toString() ?? "email@example.com",
               style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 20),
@@ -82,7 +80,7 @@ class Profile extends StatelessWidget {
             AccountOptionItem(
               icon: Icons.home,
               title: "Manage Address",
-              subtitle: userData['location'] ?? "No address set",
+              subtitle: userData['location']?.toString() ?? "No address set",
               iconColor: themeOrange,
               textColor: themeGray,
               onTap: () {},

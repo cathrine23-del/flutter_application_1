@@ -47,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Get.put<Map>(data["user"], tag: 'currentUser', permanent: true);
 
           Get.snackbar("Success", "Login successful");
-          Get.toNamed("/homescreen", arguments: data["user"]);
+          Get.toNamed("/homescreen"); // user data already stored via Get.put above
         } else {
           Get.snackbar("Error", data["message"] ?? "Login failed");
         }

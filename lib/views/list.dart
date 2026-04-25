@@ -2,39 +2,53 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:flutter_application_1/controller/cart controller.dart';
 
 class listpage extends StatefulWidget {
-  const listpage({super.key});
+  final Function(Map<String, dynamic>)? onAddToCart;
+
+  const listpage({super.key, this.onAddToCart});
 
   @override
   State<listpage> createState() => _listpageState();
 }
 
 class _listpageState extends State<listpage> {
+  // Find the controller
+  final CartController cartController = Get.find<CartController>();
+
   List myfoodItem = [];
   bool loaded = false;
   String errorMessage = "";
-
-  // Get the category name sent from the Category Page
-  String categoryName = Get.arguments ?? "All Foods";
-
-  // Change this line
+  String categoryName = "All Foods";
 
   @override
   void initState() {
     super.initState();
-    // Check if arguments is a Map or a String
-    if (Get.arguments is Map) {
-      categoryName = Get.arguments['category_name'] ?? "All Foods";
-    } else {
-      categoryName = Get.arguments ?? "All Foods";
+
+    // 1. Get the arguments safely
+    dynamic args = Get.arguments;
+
+    if (args != null) {
+      if (args is Map) {
+        // If it's a Map, look for the key. Use .toString() to be safe.
+        categoryName =
+            (args['category_name'] ?? args['name'] ?? "All Foods").toString();
+      } else if (args is String) {
+        // If it's already a String, just use it.
+        categoryName = args;
+      } else {
+        // If it's something else, convert it to a string so it doesn't crash.
+        categoryName = args.toString();
+      }
     }
+
+    // 2. Fetch the food using the cleaned-up name
     fetchFood();
   }
 
   Future<void> fetchFood() async {
     try {
-      // We pass the category as a query parameter to your PHP
       var response = await http.get(
         Uri.parse(
             "http://localhost/flutter_api/fetch.php?category=$categoryName"),
@@ -42,25 +56,30 @@ class _listpageState extends State<listpage> {
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
-        setState(() {
-          myfoodItem = data['food'];
-          loaded = true;
-        });
+        if (mounted) {
+          setState(() {
+            myfoodItem = data['food'] ?? [];
+            loaded = true;
+          });
+        }
       } else {
+        if (mounted) {
+          setState(() {
+            errorMessage = "Server Error: ${response.statusCode}";
+            loaded = true;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          errorMessage = "Server Error: ${response.statusCode}";
+          errorMessage = "Connection Failed: $e";
           loaded = true;
         });
       }
-    } catch (e) {
-      setState(() {
-        errorMessage = "Connection Failed: $e";
-        loaded = true;
-      });
     }
   }
 
-  // --- THE SELECTION LOGIC (BOTTOM SHEET) ---
   void showOrderOptions(BuildContext context, Map item) {
     showModalBottomSheet(
       context: context,
@@ -85,7 +104,7 @@ class _listpageState extends State<listpage> {
                   style: const TextStyle(fontSize: 16, color: Colors.grey)),
               const SizedBox(height: 25),
 
-              // Add to Cart Button
+              // ADD TO CART BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -96,13 +115,27 @@ class _listpageState extends State<listpage> {
                         borderRadius: BorderRadius.circular(15)),
                   ),
                   onPressed: () {
-                    Get.back();
+                    // THE FIX: Convert the dynamic Map into a String-Keyed Map
+                    Map<String, dynamic> cleanItem =
+                        Map<String, dynamic>.from(item);
+
+                    // 1. Logic for the Bottom Nav flow
+                    if (widget.onAddToCart != null) {
+                      widget.onAddToCart!(cleanItem);
+                    }
+
+                    // 2. Logic for the Category flow (Direct Controller Access)
+                    cartController.addToCart(cleanItem);
+
+                    Navigator.pop(context); // Close bottom sheet
+
                     Get.snackbar(
                       "Success",
                       "${item['foodname']} added to cart",
                       snackPosition: SnackPosition.BOTTOM,
                       backgroundColor: Colors.green,
                       colorText: Colors.white,
+                      duration: const Duration(seconds: 1),
                     );
                   },
                   child: const Text("ADD TO CART",
@@ -112,7 +145,6 @@ class _listpageState extends State<listpage> {
               ),
               const SizedBox(height: 12),
 
-              // Place Order Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -123,8 +155,8 @@ class _listpageState extends State<listpage> {
                         borderRadius: BorderRadius.circular(15)),
                   ),
                   onPressed: () {
-                    Get.back();
-                    Get.toNamed("/cart"); // Navigates to your Cart page
+                    Navigator.pop(context);
+                    Get.toNamed("/cart");
                   },
                   child: const Text("PLACE ORDER NOW",
                       style: TextStyle(
@@ -143,8 +175,7 @@ class _listpageState extends State<listpage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text(
-            categoryName.toUpperCase()), // Shows which category you clicked
+        title: Text(categoryName.toUpperCase()),
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -166,8 +197,7 @@ class _listpageState extends State<listpage> {
                           borderRadius: BorderRadius.circular(15)),
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(10),
-                        onTap: () => showOrderOptions(
-                            context, food), // Selection logic trigger
+                        onTap: () => showOrderOptions(context, food),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: Image.network(
